@@ -12,14 +12,76 @@ const Register = () => {
     return [];
   });
 
-  const [formData, setFormData] = useState({
+  const initialState = {
     userName: "",
+    email: "",
     password: "",
-  });
+    cpass: "",
+  };
 
-  const [error, setError] = useState("");
+  const validateField = {
+    userName: {
+      required: true,
+      pattern: /^[A-Za-z][A-Za-z0-9_]{2,19}$/,
+      message:
+        "Username must start with a letter. Use only 3–20 letters, numbers, or _",
+    },
+    email: {
+      required: true,
+      pattern: /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/,
+      message: "Enter a valid email address",
+    },
+    password: {
+      required: true,
+      pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/,
+      message: "Password must have 8+ chars with upper, lower & number",
+    },
+    cpass: {
+      required: true,
+    },
+  };
+
+  function validate(data) {
+    let newError = {};
+
+    Object.keys(validateField).forEach((field) => {
+      const rules = validateField[field];
+      const value = data[field];
+      console.log(value);
+
+      if (rules.required && !value.trim()) {
+        newError[field] = "This field is required";
+        return;
+      }
+
+      if (rules.pattern && value && !rules.pattern.test(value)) {
+        newError[field] = rules.message;
+      }
+
+      if(users.some(val => val.userName === data.userName)){
+        newError.userName = "Username already taken"
+      }
+
+      if(users.some(val => val.email === data.email)){
+        newError.email = "User already exist with same email"
+      }
+
+      if (data.cpass !== data.password) {
+        newError.cpass = "password mismatch";
+      }
+      
+    });
+    
+
+    return newError;
+  }
+
+  const [formData, setFormData] = useState(initialState);
+
+  const [error, setError] = useState(initialState);
 
   const [showPass, setShowPass] = useState(false);
+  const [showcPass, setShowcPass] = useState(false);
 
   const navigate = useNavigate();
   const { isAuthenticated } = useContext(AuthContext);
@@ -35,19 +97,34 @@ const Register = () => {
   }, [users]);
 
   function handleForm(e) {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const updateForm = {
+      ...formData,
+      [e.target.name]: e.target.value,
+    };
+    setFormData(updateForm);
+
+    const fieldError = validate(updateForm)[e.target.name];
+
+    if (fieldError) {
+      setError({
+        ...error,
+        [e.target.name]: fieldError,
+      });
+    } else {
+      setError({
+        ...error,
+        [e.target.name]: "",
+      });
+    }
+    console.log(error);
   }
 
   function handleSubmit(e) {
     e.preventDefault();
-    if (!(formData.userName.trim() && formData.password.trim())) {
-      setError("All fields required");
-      return;
-    }
-
-    if (users.some((val) => val.userName === formData.userName)) {
-      setError("User already exist");
-      return;
+    const validateErrors = validate(formData);
+    if(Object.keys(validateErrors).length > 0){
+      setError(validateErrors);
+      return
     }
 
     toast.success("User registered successfully!", {
@@ -67,6 +144,7 @@ const Register = () => {
       {
         id: Date.now(),
         userName: formData.userName,
+        email : formData.email,
         password: formData.password,
       },
     ]);
@@ -82,35 +160,97 @@ const Register = () => {
       <div className="bg-gray-400 text-white w-100 rounded-xl p-4 flex flex-col items-center">
         <h2 className="text-3xl font-medium mb-5">Register User</h2>
         <form onSubmit={handleSubmit} className="mb-2">
-          <input
-            onChange={handleForm}
-            value={formData.userName}
-            type="text"
-            name="userName"
-            placeholder="Enter new username"
-            className="border p-2 w-full bg-gray-200 rounded-xl text-black focus:outline-none focus:ring-2 focus:ring-blue-400 text-xl mb-3"
-          />
-
-          <div className="relative w-90">
+          <div className="w-full">
+            <label className="text-black" htmlFor="userName">
+              Username
+            </label>
             <input
               onChange={handleForm}
-              type={showPass ? "text" : "password"}
-              value={formData.password}
-              name="password"
-              placeholder="Enter password"
-              className="border p-2 w-full bg-gray-200 rounded-xl text-black focus:outline-none focus:ring-2 focus:ring-blue-400 text-xl mb-3"
+              value={formData.userName}
+              type="text"
+              id="userName"
+              name="userName"
+              placeholder="Enter new username"
+              className="border p-2 w-full bg-gray-200 rounded-xl text-black focus:outline-none focus:ring-2 focus:ring-blue-400 text-xl"
             />
-            <button
-              type="button"
-              onMouseDown={() => setShowPass(!showPass)}
-              onMouseUp={() => setShowPass(!showPass)}
-              className="absolute inset-y-0 right-0 flex items-center px-3 pb-2 text-black cursor-pointer focus:outline-none"
-            >
-              {showPass ? <Eye size={18} /> : <EyeClosed size={18} />}
-            </button>
+            {error.userName && (
+              <p className="text-red-500 text-sm mb-1">{error.userName}</p>
+            )}
           </div>
 
-          {error && <p className="text-red-600 mb-2">{error}</p>}
+          <div className="w-full mb-1">
+            <label className="text-black" htmlFor="email">
+              E-mail
+            </label>
+            <input
+              onChange={handleForm}
+              value={formData.email}
+              type="text"
+              id="email"
+              name="email"
+              placeholder="example@demo.com"
+              className="border p-2 w-full bg-gray-200 rounded-xl text-black focus:outline-none focus:ring-2 focus:ring-blue-400 text-xl"
+            />
+            {error.email && (
+              <p className="text-red-500 text-sm">{error.email}</p>
+            )}
+          </div>
+
+          <div className="w-full mb-1">
+            <label htmlFor="password" className="text-black">
+              Password
+            </label>
+            <div className="relative w-90">
+              <input
+                onChange={handleForm}
+                type={showPass ? "text" : "password"}
+                value={formData.password}
+                name="password"
+                id="password"
+                placeholder="Enter password"
+                className="border p-2 w-full bg-gray-200 rounded-xl text-black focus:outline-none focus:ring-2 focus:ring-blue-400 text-xl"
+              />
+              <button
+                type="button"
+                onMouseDown={() => setShowPass(!showPass)}
+                onMouseUp={() => setShowPass(!showPass)}
+                className="absolute inset-y-0 right-0 flex items-center px-3 pb-2 text-black cursor-pointer focus:outline-none"
+              >
+                {showPass ? <Eye size={18} /> : <EyeClosed size={18} />}
+              </button>
+            </div>
+            {error.password && (
+              <p className="text-red-500 text-sm">{error.password}</p>
+            )}
+          </div>
+
+          <div className="w-full mb-3">
+            <label htmlFor="cpass" className="text-black">
+              Confirm Password
+            </label>
+            <div className="relative w-90">
+              <input
+                onChange={handleForm}
+                type={showcPass ? "text" : "password"}
+                value={formData.cpass}
+                name="cpass"
+                id="cpass"
+                placeholder="Enter password"
+                className="border p-2 w-full bg-gray-200 rounded-xl text-black focus:outline-none focus:ring-2 focus:ring-blue-400 text-xl"
+              />
+              <button
+                type="button"
+                onMouseDown={() => setShowcPass(!showcPass)}
+                onMouseUp={() => setShowcPass(!showcPass)}
+                className="absolute inset-y-0 right-0 flex items-center px-3 pb-2 text-black cursor-pointer focus:outline-none"
+              >
+                {showcPass ? <Eye size={18} /> : <EyeClosed size={18} />}
+              </button>
+            </div>
+            {error.cpass && (
+              <p className="text-red-500 text-sm">{error.cpass}</p>
+            )}
+          </div>
 
           <button
             type="submit"
