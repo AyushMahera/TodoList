@@ -9,10 +9,37 @@ const Login = () => {
     ? JSON.parse(localStorage.getItem("users"))
     : [];
 
-  const [formData, setFormData] = useState({
+  const initialState = {
     userName: "",
     password: "",
-  });
+  };
+
+  const [formData, setFormData] = useState(initialState);
+
+  const validateField = {
+    userName: {
+      required: true,
+    },
+    password: {
+      required: true,
+    },
+  };
+
+  function validate(data) {
+    let newError = {};
+
+    Object.keys(validateField).forEach((field) => {
+      const rules = validateField[field];
+      const value = data[field];
+
+      if (rules.required && !value.trim()) {
+        newError[field] = "This field is required";
+        return;
+      }
+    });
+
+    return newError;
+  }
 
   const { isAuthenticated, login } = useContext(AuthContext);
   AuthContext;
@@ -30,13 +57,32 @@ const Login = () => {
   }, [isAuthenticated, navigate]);
 
   function handleForm(e) {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const updateForm = {
+      ...formData,
+      [e.target.name]: e.target.value,
+    };
+    setFormData(updateForm);
+
+    const fieldError = validate(updateForm)[e.target.name];
+
+    if (fieldError) {
+      setError({
+        ...error,
+        [e.target.name]: fieldError,
+      });
+    } else {
+      setError({
+        ...error,
+        [e.target.name]: "",
+      });
+    }
   }
 
   function handleSubmit(e) {
     e.preventDefault();
-    if (!(formData.userName.trim() && formData.password.trim())) {
-      setError("All fields required");
+    const validateErrors = validate(formData);
+    if (Object.keys(validateErrors).length > 0) {
+      setError(validateErrors);
       return;
     }
 
@@ -73,9 +119,19 @@ const Login = () => {
       setError("");
       return;
     }else{
-      setError("Invalid username or password!");
+      toast.error("Invalid Username or Password", {
+        position: "bottom-center",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: false,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+        transition: Slide,
+      });
+      setFormData(initialState)
     }
-
   }
 
   return (
@@ -83,44 +139,68 @@ const Login = () => {
       <div className="bg-gray-400 text-white w-100 rounded-xl p-4 flex flex-col items-center">
         <h2 className="text-3xl font-medium mb-5">Login</h2>
         <form onSubmit={handleSubmit} className="mb-2">
-          <input
-            onChange={handleForm}
-            value={formData.userName}
-            type="text"
-            name="userName"
-            placeholder="Enter username"
-            className="border p-2 w-full bg-gray-200 rounded-xl text-black focus:outline-none focus:ring-2 focus:ring-blue-400 text-xl mb-3"
-          />
-          <div className="relative w-90">
-          <input
-            onChange={handleForm}
-            type={showPass ? "text":"password"}
-            value={formData.password}
-            name="password"
-            placeholder="Enter password"
-            className="border p-2 w-full bg-gray-200 rounded-xl text-black focus:outline-none focus:ring-2 focus:ring-blue-400 text-xl mb-3"
-          />
-          <button type="button" onMouseDown={() => setShowPass(!showPass)} onMouseUp={() => setShowPass(!showPass)} className="absolute inset-y-0 right-0 flex items-center px-3 pb-2 text-black cursor-pointer focus:outline-none">
-            {showPass ? <Eye size={18} /> : <EyeClosed size={18} />}
-          </button>
+          <div className="w-full mb-1">
+            <label className="text-black" htmlFor="userName">
+              Username
+            </label>
+            <input
+              onChange={handleForm}
+              value={formData.userName}
+              type="text"
+              id="userName"
+              name="userName"
+              placeholder="Enter new username"
+              className="border p-2 w-full bg-gray-200 rounded-xl text-black focus:outline-none focus:ring-2 focus:ring-blue-400 text-xl"
+            />
+            {error.userName && (
+              <p className="text-red-500 text-sm">{error.userName}</p>
+            )}
           </div>
-          {error && <p className="text-red-600 mb-2">{error}</p>}
-            <button
-              type="submit"
-              className="bg-blue-500 w-full p-2 rounded-xl hover:bg-blue-400 transition-colors duration-200 cursor-pointer mb-2"
-            >
-              Login
-            </button>
-        </form>
-      <div className="flex gap-1">
-        <p>Don't have an account ? </p>
-        <NavLink
-              to="/register"
-              className="font-medium text-blue-300 underline hover:text-white transition-colors duration-200"
-            >
-              Register here
-            </NavLink>
+
+          <div className="w-full mb-3">
+            <label htmlFor="password" className="text-black">
+              Password
+            </label>
+            <div className="relative w-90">
+              <input
+                onChange={handleForm}
+                type={showPass ? "text" : "password"}
+                value={formData.password}
+                name="password"
+                id="password"
+                placeholder="Enter password"
+                className="border p-2 w-full bg-gray-200 rounded-xl text-black focus:outline-none focus:ring-2 focus:ring-blue-400 text-xl"
+              />
+              <button
+                type="button"
+                onMouseDown={() => setShowPass(!showPass)}
+                onMouseUp={() => setShowPass(!showPass)}
+                className="absolute inset-y-0 right-0 flex items-center px-3 pb-2 text-black cursor-pointer focus:outline-none"
+              >
+                {showPass ? <Eye size={18} /> : <EyeClosed size={18} />}
+              </button>
             </div>
+            {error.password && (
+              <p className="text-red-500 text-sm">{error.password}</p>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            className="bg-blue-500 w-full p-2 rounded-xl hover:bg-blue-400 transition-colors duration-200 cursor-pointer mb-2"
+          >
+            Login
+          </button>
+        </form>
+        <div className="flex gap-1">
+          <p>Don't have an account ? </p>
+          <NavLink
+            to="/register"
+            className="font-medium text-blue-300 underline hover:text-white transition-colors duration-200"
+          >
+            Register here
+          </NavLink>
+        </div>
       </div>
     </div>
   );

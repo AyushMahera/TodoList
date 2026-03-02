@@ -47,7 +47,6 @@ const Register = () => {
     Object.keys(validateField).forEach((field) => {
       const rules = validateField[field];
       const value = data[field];
-      console.log(value);
 
       if (rules.required && !value.trim()) {
         newError[field] = "This field is required";
@@ -116,7 +115,6 @@ const Register = () => {
         [e.target.name]: "",
       });
     }
-    console.log(error);
   }
 
   function handleSubmit(e) {
@@ -160,7 +158,7 @@ const Register = () => {
       <div className="bg-gray-400 text-white w-100 rounded-xl p-4 flex flex-col items-center">
         <h2 className="text-3xl font-medium mb-5">Register User</h2>
         <form onSubmit={handleSubmit} className="mb-2">
-          <div className="w-full">
+          <div className="w-full mb-1">
             <label className="text-black" htmlFor="userName">
               Username
             </label>
@@ -174,7 +172,7 @@ const Register = () => {
               className="border p-2 w-full bg-gray-200 rounded-xl text-black focus:outline-none focus:ring-2 focus:ring-blue-400 text-xl"
             />
             {error.userName && (
-              <p className="text-red-500 text-sm mb-1">{error.userName}</p>
+              <p className="text-red-500 text-sm">{error.userName}</p>
             )}
           </div>
 
