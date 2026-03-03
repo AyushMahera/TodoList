@@ -1,10 +1,12 @@
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import AddTaskModal from "./AddTaskModal";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const { logout } = useContext(AuthContext);
+  const [showModal, setShowModal] = useState(false)
 
   return (
     <div className="bg-cyan-900 flex justify-between items-center px-20 py-3 min-h-[8vh]">
@@ -37,6 +39,14 @@ const Navbar = () => {
         >
           Tasks
         </NavLink>
+
+        <button
+          onClick={() => setShowModal(true)}
+          className="text-xl bg-white text-black px-3 py-2 rounded-2xl hover:bg-amber-200 transition-colors duration-200 cursor-pointer"
+        >
+          Create New Task
+        </button>
+
         <button
           onClick={logout}
           className="text-xl bg-white text-black px-3 py-2 rounded-2xl hover:bg-amber-200 transition-colors duration-200 cursor-pointer"
@@ -44,6 +54,7 @@ const Navbar = () => {
           Logout
         </button>
       </div>
+      {showModal && <AddTaskModal setShowModal={setShowModal}/>}
     </div>
   );
 };

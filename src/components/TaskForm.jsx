@@ -4,13 +4,16 @@ import { Slide, toast } from "react-toastify";
 import { AuthContext } from "../context/AuthContext";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { createTask } from "../redux/features/todoSlice";
 
-const TaskForm = () => {
-  const [tasks, setTasks] = useState(() => {
-    const tasks = localStorage.getItem("tasks");
-    if (tasks) return JSON.parse(tasks);
-    return [];
-  });
+const TaskForm = ({setShowModal}) => {
+
+  const tasks = useSelector(state => state.todo.tasks);
+  const dispatch = useDispatch();
+  
+
+  
 
   const initialState = {
     title: "",
@@ -91,17 +94,15 @@ const TaskForm = () => {
       transition: Slide,
     });
     setError("");
-    setTasks([
-      {
+    dispatch(createTask({
         id: Date.now(),
         userId: loggedUser,
         title: formData.title,
         details: formData.details,
         completed: false,
-      },
-      ...tasks,
-    ]);
+      }))
     setFormData(initialState);
+    setShowModal(false);
   }
 
   return (
@@ -139,21 +140,22 @@ const TaskForm = () => {
           {error.details && <p className="text-red-500 text-sm">{error.details}</p>}
         </div>
 
-        <button
+        <div className="w-full flex gap-2">
+          <button
+          type="button"
+          onClick={() => setShowModal(false)}
+          className="bg-red-500 w-full p-2 rounded-xl hover:bg-red-400 transition-colors duration-200 cursor-pointer"
+        >
+          Cancel
+        </button>
+          <button
           type="submit"
           className="bg-blue-500 w-full p-2 rounded-xl hover:bg-blue-400 transition-colors duration-200 cursor-pointer"
         >
           Add task
         </button>
+        </div>
       </form>
-      <div className="w-full flex items-center justify-end mb-2">
-        <Link
-          to="/tasks"
-          className="flex items-center gap-1 hover:text-blue-300 transition-colors"
-        >
-          View Tasks <ArrowRight size={22} className="pt-1" />
-        </Link>
-      </div>
     </div>
   );
 };

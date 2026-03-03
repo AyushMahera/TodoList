@@ -4,39 +4,44 @@ import { Slide, toast } from "react-toastify";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { LayoutGrid, List } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  completeTask,
+  deleteTask,
+  filterTasks,
+  searchTasks,
+} from "../redux/features/todoSlice";
+import { searchFilterTodo } from "../redux/selector";
+import { useSearchParams } from "react-router-dom";
 
 const Tasks = () => {
-  const [tasks, setTasks] = useState(() => {
-    const tasks = localStorage.getItem("tasks");
-    if (tasks) return JSON.parse(tasks);
-    return [];
-  });
+  const { loggedUser } = useContext(AuthContext);
+  const allTasks = useSelector(searchFilterTodo);
+  const tasks = allTasks.filter((task) => task.userId === loggedUser);
+  const dispatch = useDispatch();
 
   const [editingTaskId, setEditingTaskId] = useState(null);
 
   const [isList, setIsList] = useState(false);
 
-  const { loggedUser } = useContext(AuthContext);
-
+  const [searchParam, setSearchParam] = useSearchParams();
+  const [filter, setfilter] = useState(searchParam.get("filter") || "");
+  const [search, setSearch] = useState("");
+  
   useEffect(() => {
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-  }, [tasks]);
+    dispatch(filterTasks(filter));
+    dispatch(searchTasks(search))
+  },[])
+
 
   function handleToggle(task) {
-    let temp = tasks.map((val) => {
-      return task.id === val.id ? { ...val, completed: !val.completed } : val;
-    });
-    console.log(temp);
-    
-    setTasks(temp);
-    console.log(tasks);
+    dispatch(completeTask(task.id));
   }
 
   function onDelete(task) {
-    let temp = tasks.filter((val) => {
-      return task.id !== val.id;
-    });
-    setTasks(temp);
+    console.log(task.id);
+
+    dispatch(deleteTask(task.id));
     toast.error("Task deleted!", {
       position: "bottom-center",
       autoClose: 2000,
@@ -50,10 +55,19 @@ const Tasks = () => {
     });
   }
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      dispatch(filterTasks(filter));
+      dispatch(searchTasks(search));
+    }, 1000);
+
+    return () => clearTimeout(timer)
+  },[search, filter, dispatch]);
+
   return (
     <div id="tasklist" className="p-4 h-[91vh] overflow-auto w-full">
-      {tasks.filter((val) => val.userId === loggedUser).length > 0 ? (
-        <div className="flex justify-center gap-10 mb-10">
+      <div className="w-full flex justify-between mb-10">
+        <div className="flex gap-10">
           <button
             onClick={() => setIsList(false)}
             className={`flex gap-1 items-center hover:text-gray-500 hover:cursor-pointer ${!isList ? "text-white" : "text-gray-400"}`}
@@ -69,29 +83,57 @@ const Tasks = () => {
             Listview
           </button>
         </div>
-      ) : (
+        <div>
+          <input
+            type="search"
+            name="search"
+            value={search}
+            id="search"
+            onChange={(e) => {
+              setSearch(e.target.value);
+            }}
+            className="border bg-white text-black px-2 rounded mr-4"
+            placeholder="Search Tasks"
+          />
+          <label htmlFor="filter">Filter : </label>
+          <select
+            name="filter"
+            value={filter}
+            id="filter"
+            onChange={(e) => {
+              setfilter(e.target.value);
+              setSearchParam({filter : `${e.target.value}`})
+            }}
+            className="border rounded px-2 bg-white text-black"
+          >
+            <option value="" >
+              All Tasks
+            </option>
+            <option value="completed">Completed Tasks</option>
+            <option value="pending">Pending Tasks</option>
+          </select>
+        </div>
+      </div>
+
+      {tasks.length === 0 && (
         <h1 className="text-3xl font-medium text-center">No task found!</h1>
       )}
 
       <div
-        className={`flex gap-5 flex-wrap w-full   ${isList ? "flex-col items-center" : "items-start"} transition-all duration-300 ease-in-out`}
+        className={`flex gap-5 flex-wrap w-full ${isList ? "flex-col items-center" : "items-start"} transition-all duration-300 ease-in-out`}
       >
-        {tasks.map((task, idx) => {
-          return task.userId === loggedUser ? (
-            <div key={idx}>
+        {tasks.map((task) => {
+          return (
+            <div key={task.id}>
               <TaskItem
                 task={task}
                 handleToggle={handleToggle}
                 onDelete={onDelete}
-                tasks={tasks}
-                setTasks={setTasks}  
                 editingTaskId={editingTaskId}
                 setEditingTaskId={setEditingTaskId}
                 isList={isList}
               />
             </div>
-          ) : (
-            ""
           );
         })}
       </div>

@@ -1,59 +1,89 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Slide, toast } from "react-toastify";
 import TaskModal from "./TaskModal";
 import EditModal from "./EditModal";
+import { useDispatch } from "react-redux";
+import { editTask } from "../redux/features/todoSlice";
 
 const TaskItem = ({
   task,
   handleToggle,
   onDelete,
-  tasks,
-  setTasks,
   editingTaskId,
   setEditingTaskId,
   isList,
 }) => {
-  const [editData, setEditData] = useState({
-    title: task.title,
-    details: task.details
-  }); 
-  
+  const dispatch = useDispatch();
+
+  const initialState = {
+    title: "",
+    details: "",
+  };
+
+  const [editData, setEditData] = useState(initialState);
+  const [error, setError] = useState(initialState);
+
+  const validationField = {
+    title: {
+      required: true,
+    },
+    details: {
+      required: true,
+    },
+  };
+
+  function handleForm(e) {
+    const updateForm = {
+      ...editData,
+      [e.target.name]: e.target.value,
+    };
+    setEditData(updateForm);
+
+    const fieldError = validate(updateForm)[e.target.name];
+
+    if (fieldError) {
+      setError({
+        ...error,
+        [e.target.name]: fieldError,
+      });
+    } else {
+      setError({
+        ...error,
+        [e.target.name]: "",
+      });
+    }
+  }
+
+  function validate(data) {
+    let newError = {};
+    Object.keys(validationField).forEach((field) => {
+      const rules = validationField[field];
+      const value = data[field];
+
+      if (rules.required && !value.trim()) {
+        newError[field] = "This field is required";
+        return;
+      }
+    });
+    return newError;
+  }
 
   const [showModal, setShowModal] = useState(false);
   const [editShowModal, setEditShowModal] = useState(false);
 
   const isEditable = editingTaskId === task.id;
 
-  useEffect(() => {
-      localStorage.setItem("tasks", JSON.stringify(tasks));
-    }, [tasks]);
-
-
   function onEdit(task) {
     console.log(task);
-    
-    if (!(editData.title.trim() && editData.details.trim())) {
-      toast.error("Field can't be empty!", {
-        position: "bottom-center",
-        autoClose: 2000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "dark",
-        transition: Slide,
-      });
+
+    const validateErrors = validate(editData);
+    if (Object.keys(validateErrors).length > 0) {
+      setError(validateErrors);
       return;
     }
 
-    let temp = tasks.map((val) => {
-      return val.id === task.id ? { ...task,...editData } : val;
-    });
+    dispatch(editTask({ ...task, ...editData }));
 
-    console.log(editData);
-    
-    setTasks(temp);
     setEditingTaskId(null);
     toast.success("Task Edited!", {
       position: "bottom-center",
@@ -77,6 +107,7 @@ const TaskItem = ({
       details: task.details,
     });
     setEditShowModal(false);
+    setError(initialState)
   }
 
   return (
@@ -105,6 +136,10 @@ const TaskItem = ({
           onClick={(e) => {
             e.stopPropagation();
             setEditingTaskId(task.id);
+            setEditData({
+              title: task.title,
+              details: task.details,
+            });
             setEditShowModal(true);
           }}
           className="bg-yellow-500 px-4 py-2 rounded-xl hover:bg-yellow-300 transition-colors duration-200 cursor-pointer"
@@ -160,26 +195,38 @@ const TaskItem = ({
             Edit Task
           </h1>
           <div>
-            <h2 className="mb-1">Task title :</h2>
-            <input
-              name="title"
-              value={editData.title}
-              onClick={(e) => e.stopPropagation()}
-              onChange={(e) =>
-                setEditData({ ...editData, title: e.target.value })
-              }
-              className="bg-white w-full text-black text-2xl px-2 py-1 rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-400 mb-2"
-            />
-            <h2 className="mb-1">Task description :</h2>
-            <textarea
-              name="title"
-              value={editData.details}
-              onClick={(e) => e.stopPropagation()}
-              onChange={(e) =>
-                setEditData({ ...editData, details: e.target.value })
-              }
-              className="bg-white w-full text-black px-2 py-1 rounded-xl h-30 border resize-none focus:outline-none focus:ring-2 focus:ring-blue-400 mb-3"
-            ></textarea>
+            <div className="w-full mb-1">
+              <label className="text-black" htmlFor="title">
+                Title <span className="text-sm text-red-500">*</span>
+              </label>
+              <input
+                name="title"
+                id="title"
+                value={editData.title}
+                onClick={(e) => e.stopPropagation()}
+                onChange={handleForm}
+                className="border p-2 w-full bg-gray-200 rounded-xl text-black focus:outline-none focus:ring-2 focus:ring-blue-400 text-xl"
+              />
+              {error.title && (
+                <p className="text-red-500 text-sm mt-1">{error.title}</p>
+              )}
+            </div>
+
+            <div className="w-full mb-3">
+              <label className="text-black" htmlFor="details">
+                Details <span className="text-sm text-red-500">*</span>
+              </label>
+              <textarea
+                name="details"
+                value={editData.details}
+                onClick={(e) => e.stopPropagation()}
+                onChange={handleForm}
+                className="border p-2 w-full h-35 bg-gray-200 rounded-xl text-black focus:outline-none focus:ring-2 focus:ring-blue-400 text-xl resize-none"
+              />
+              {error.details && (
+                <p className="text-red-500 text-sm">{error.details}</p>
+              )}
+            </div>
           </div>
           <div className="flex gap-3">
             <button

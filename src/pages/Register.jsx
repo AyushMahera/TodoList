@@ -136,7 +136,7 @@ const Register = () => {
       theme: "dark",
       transition: Slide,
     });
-    setError("");
+    setError(initialState);
     setUsers([
       ...users,
       {
@@ -146,10 +146,7 @@ const Register = () => {
         password: formData.password,
       },
     ]);
-    setFormData({
-      userName: "",
-      password: "",
-    });
+    setFormData(initialState);
     navigate("/login");
   }
 
