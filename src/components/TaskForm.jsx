@@ -110,7 +110,7 @@ const TaskForm = () => {
       <form onSubmit={handleSubmit} className="w-full">
         <div className="w-full mb-1">
           <label className="text-black" htmlFor="title">
-            Title
+            Title <span className="text-sm text-red-500">*</span>
           </label>
           <input
             onChange={handleForm}
@@ -126,7 +126,7 @@ const TaskForm = () => {
 
         <div className="w-full mb-3">
           <label className="text-black" htmlFor="details">
-            Details
+            Details <span className="text-sm text-red-500">*</span>
           </label>
           <textarea
             onChange={handleForm}

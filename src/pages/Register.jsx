@@ -160,7 +160,7 @@ const Register = () => {
         <form onSubmit={handleSubmit} className="mb-2">
           <div className="w-full mb-1">
             <label className="text-black" htmlFor="userName">
-              Username
+              Username <span className="text-sm text-red-500">*</span>
             </label>
             <input
               onChange={handleForm}
@@ -178,7 +178,7 @@ const Register = () => {
 
           <div className="w-full mb-1">
             <label className="text-black" htmlFor="email">
-              E-mail
+              E-mail <span className="text-sm text-red-500">*</span>
             </label>
             <input
               onChange={handleForm}
@@ -196,7 +196,7 @@ const Register = () => {
 
           <div className="w-full mb-1">
             <label htmlFor="password" className="text-black">
-              Password
+              Password <span className="text-sm text-red-500">*</span>
             </label>
             <div className="relative w-90">
               <input
@@ -224,7 +224,7 @@ const Register = () => {
 
           <div className="w-full mb-3">
             <label htmlFor="cpass" className="text-black">
-              Confirm Password
+              Confirm Password <span className="text-sm text-red-500">*</span>
             </label>
             <div className="relative w-90">
               <input
@@ -233,7 +233,7 @@ const Register = () => {
                 value={formData.cpass}
                 name="cpass"
                 id="cpass"
-                placeholder="Enter password"
+                placeholder="Confirm password"
                 className="border p-2 w-full bg-gray-200 rounded-xl text-black focus:outline-none focus:ring-2 focus:ring-blue-400 text-xl"
               />
               <button

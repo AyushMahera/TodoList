@@ -141,7 +141,7 @@ const Login = () => {
         <form onSubmit={handleSubmit} className="mb-2">
           <div className="w-full mb-1">
             <label className="text-black" htmlFor="userName">
-              Username
+              Username <span className="text-sm text-red-500">*</span>
             </label>
             <input
               onChange={handleForm}
@@ -159,7 +159,7 @@ const Login = () => {
 
           <div className="w-full mb-3">
             <label htmlFor="password" className="text-black">
-              Password
+              Password <span className="text-sm text-red-500">*</span>
             </label>
             <div className="relative w-90">
               <input
