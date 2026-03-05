@@ -13,7 +13,7 @@ import { AuthContext } from "./context/AuthContext";
 const App = () => {
   const { isAuthenticated } = useContext(AuthContext);
   return (
-    <div className="bg-black h-screen w-full text-white">
+    <div className="bg-zinc-950 min-h-screen w-full text-white">
       {isAuthenticated && <Navbar />}
       <Routes>
         <Route path="/register" element={<Register />} />
